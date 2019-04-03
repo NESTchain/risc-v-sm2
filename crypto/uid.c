@@ -16,7 +16,7 @@
 
 int OPENSSL_issetugid(void)
 {
-    return issetugid();
+	return 0;
 }
 
 #elif defined(OPENSSL_SYS_WIN32) || defined(OPENSSL_SYS_VXWORKS) || defined(OPENSSL_SYS_UEFI)
@@ -40,10 +40,6 @@ int OPENSSL_issetugid(void)
 
 int OPENSSL_issetugid(void)
 {
-# ifdef OSSL_IMPLEMENT_GETAUXVAL
-    return getauxval(AT_SECURE) != 0;
-# else
-    return getuid() != geteuid() || getgid() != getegid();
-# endif
+	return 0;
 }
 #endif

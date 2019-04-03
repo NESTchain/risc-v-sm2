@@ -41,7 +41,7 @@
 #include <limits.h>
 #include <string.h>
 #include <sys/types.h>
-#include <dirent.h>
+//#include <dirent.h>
 #include <errno.h>
 #ifndef LPDIR_H
 # include "LPdir.h"
@@ -73,6 +73,19 @@
 # define LP_ENTRY_SIZE 255
 #endif
 
+struct __dirstream
+   {
+void *__fd; /* `struct hurd_fd' pointer for descriptor.   */
+char *__data; /* Directory block.   */
+int __entry_data; /* Entry number `__data' corresponds to.   */
+char *__ptr; /* Current pointer into the block.   */
+int __entry_ptr; /* Entry number `__ptr' corresponds to.   */
+size_t __allocation; /* Space allocated for the block.   */
+size_t __size; /* Total valid data in the block.   */
+   };
+
+typedef struct __dirstream DIR;
+
 struct LP_dir_context_st {
     DIR *dir;
     char entry_name[LP_ENTRY_SIZE + 1];
@@ -84,86 +97,10 @@ struct LP_dir_context_st {
 
 const char *LP_find_file(LP_DIR_CTX **ctx, const char *directory)
 {
-    struct dirent *direntry = NULL;
-
-    if (ctx == NULL || directory == NULL) {
-        errno = EINVAL;
-        return 0;
-    }
-
-    errno = 0;
-    if (*ctx == NULL) {
-        *ctx = malloc(sizeof(**ctx));
-        if (*ctx == NULL) {
-            errno = ENOMEM;
-            return 0;
-        }
-        memset(*ctx, 0, sizeof(**ctx));
-
-#ifdef __VMS
-        {
-            char c = directory[strlen(directory) - 1];
-
-            if (c == ']' || c == '>' || c == ':')
-                (*ctx)->expect_file_generations = 1;
-        }
-#endif
-
-        (*ctx)->dir = opendir(directory);
-        if ((*ctx)->dir == NULL) {
-            int save_errno = errno; /* Probably not needed, but I'm paranoid */
-            free(*ctx);
-            *ctx = NULL;
-            errno = save_errno;
-            return 0;
-        }
-    }
-
-#ifdef __VMS
-    strncpy((*ctx)->previous_entry_name, (*ctx)->entry_name,
-            sizeof((*ctx)->previous_entry_name));
-
- again:
-#endif
-
-    direntry = readdir((*ctx)->dir);
-    if (direntry == NULL) {
-        return 0;
-    }
-
-    strncpy((*ctx)->entry_name, direntry->d_name,
-            sizeof((*ctx)->entry_name) - 1);
-    (*ctx)->entry_name[sizeof((*ctx)->entry_name) - 1] = '\0';
-#ifdef __VMS
-    if ((*ctx)->expect_file_generations) {
-        char *p = (*ctx)->entry_name + strlen((*ctx)->entry_name);
-
-        while(p > (*ctx)->entry_name && isdigit(p[-1]))
-            p--;
-        if (p > (*ctx)->entry_name && p[-1] == ';')
-            p[-1] = '\0';
-        if (strcasecmp((*ctx)->entry_name, (*ctx)->previous_entry_name) == 0)
-            goto again;
-    }
-#endif
-    return (*ctx)->entry_name;
+    return NULL;
 }
 
 int LP_find_file_end(LP_DIR_CTX **ctx)
 {
-    if (ctx != NULL && *ctx != NULL) {
-        int ret = closedir((*ctx)->dir);
-
-        free(*ctx);
-        switch (ret) {
-        case 0:
-            return 1;
-        case -1:
-            return 0;
-        default:
-            break;
-        }
-    }
-    errno = EINVAL;
     return 0;
 }
